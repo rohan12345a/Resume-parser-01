@@ -7,5 +7,5 @@ google-generativeai
 http.client
 requests
 streamlit-lottie
-azure
+azure-storage-blob
 -e .
