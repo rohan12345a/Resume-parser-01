@@ -232,7 +232,7 @@ if 'job_roles' in st.session_state:
 with st.container():
     with st.sidebar:
         members = [
-            {"name": "Saksham Jain", "email": "sakshamgr8online@gmail. com",
+            {"name": "Jain", "email": "sakshamgr8online@gmail. com",
              "linkedin": "https://www.linkedin.com/in/saksham-jain-59b2241a4/"},
             {"name": "Rohan Saraswat", "email": "rohan.saraswat2003@gmail. com", "linkedin": "https://www.linkedin.com/in/rohan-saraswat-a70a2b225/"},
             {"name": "Shambhavi Kadam", "email": "shambhavi.kadam.btech2021@sitpune.edu.in",
