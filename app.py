@@ -12,6 +12,7 @@ import requests  # To fetch the Lottie animation
 import os
 from pathlib import Path
 from spacy.util import load_model_from_path
+from azure.storage.blob import BlobServiceClient
 
 
 # Function to load Lottie animation
@@ -44,6 +45,52 @@ def load_spacy_model():
     nlp = load_model_from_path(model_path)
   # This will load the model based on 'config.cfg'
     return nlp
+# Example of using Azure Blob Storage (if applicable)
+
+
+def download_and_load_model():
+    # Azure Blob Storage details
+    blob_service_client = BlobServiceClient(
+        account_url="https://mloops01.blob.core.windows.net",
+        credential="xPOfpR9FQJ+PWewsmX63QHTouEKscSm0G0Mu9Xk4ryRyUet+KZ76xPx/ABsRDk++vLjb+dim6THa+AStFh6HMg=="
+    )
+    
+    # Specify the container and blob details
+    container_name = "finalyearproject"
+    blob_name = "model-last"  # Assuming this is the blob representing your model folder
+    model_path = "model-last"  # Local directory to store the downloaded files
+    
+    # Get the blob client
+    blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+    
+    # Check if the blob exists, handle if it's encrypted or not
+    try:
+        # Attempt to download the blob file
+        print(f"Attempting to download blob: {blob_name}")
+        with open(os.path.join(model_path, "model-last"), "wb") as download_file:
+            download_file.write(blob_client.download_blob().readall())
+        
+        print(f"Downloaded {blob_name} successfully.")
+
+        # Now try to load the model into SpaCy
+        nlp = spacy.load(model_path)
+        print("Model loaded successfully.")
+        return nlp
+
+    except Exception as e:
+        # Handle errors, such as file not found, decryption, or loading issues
+        print(f"Error occurred: {str(e)}")
+        return None
+
+# Example usage
+nlp = download_and_load_model()
+if nlp:
+    # If the model was loaded successfully
+    doc = nlp("This is a test resume text.")
+    print(doc)
+else:
+    print("Failed to load the model.")
+
 
 # Function to visualize named entities in color
 def visualize_entities(doc):
@@ -204,5 +251,5 @@ with st.container():
             st.write(f"LinkedIn: {member['linkedin']}")
             st.write("")
 
-model_path = Path(r"mlops_finalproject/model_last")
+model_path = Path(__file__).parent / "model-last"
 print(model_path)
