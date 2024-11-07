@@ -10,6 +10,9 @@ from spacy import displacy
 from streamlit_lottie import st_lottie  # Import Lottie package
 import requests  # To fetch the Lottie animation
 import os
+from pathlib import Path
+from spacy.util import load_model_from_path
+
 
 # Function to load Lottie animation
 def load_lottie_url(url):
@@ -37,8 +40,9 @@ def extract_text_from_pdf(pdf_file):
 # Load the SpaCy model from the 'model-last' folder
 @st.cache_resource
 def load_spacy_model():
-    model_path = os.path.join(os.getcwd(),'model_last') # Replace with your actual model path
-    nlp = spacy.load(model_path)  # This will load the model based on 'config.cfg'
+    model_path = Path(__file__).parent / "model-last"
+    nlp = load_model_from_path(model_path)
+  # This will load the model based on 'config.cfg'
     return nlp
 
 # Function to visualize named entities in color
@@ -199,3 +203,6 @@ with st.container():
             st.write(f"Email: {member['email']}")
             st.write(f"LinkedIn: {member['linkedin']}")
             st.write("")
+
+model_path = Path(r"mlops_finalproject/model_last")
+print(model_path)
