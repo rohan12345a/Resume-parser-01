@@ -1,19 +1,79 @@
+# import spacy
+# import streamlit as st
+# import PyPDF2
+# import pandas as pd
+# import plotly.express as px
+# import google.generativeai as genai  # Import Google Generative AI
+# import http.client
+# import json
+# from spacy import displacy
+# from streamlit_lottie import st_lottie  # Import Lottie package
+# import requests  # To fetch the Lottie animation
+# import os
+# from pathlib import Path
+# from spacy.util import load_model_from_path
+# from azure.storage.blob import BlobServiceClient
+
+
+# # Function to load Lottie animation
+# def load_lottie_url(url):
+#     r = requests.get(url)
+#     if r.status_code == 200:
+#         return r.json()
+#     return None
+
+# # Load Lottie animation
+# lottie_animation = load_lottie_url("https://lottie.host/10ef4447-c72d-44b4-b562-c93542913924/rQXGHy5QwU.json")
+
+# # Configure Google Generative AI
+# GOOGLE_API_KEY = 'AIzaSyCByDN630R0xn5_wXh4GgZBhBqX3Nw8S90'  # Replace with your actual API key
+# genai.configure(api_key=GOOGLE_API_KEY)
+# st.set_page_config(page_title="AI-Powered Resume Parser and Job Finder")
+# # Function to extract text from PDF using PdfReader (PyPDF2 3.x)
+# def extract_text_from_pdf(pdf_file):
+#     pdf_reader = PyPDF2.PdfReader(pdf_file)
+#     text = ""
+#     for page_num in range(len(pdf_reader.pages)):
+#         page = pdf_reader.pages[page_num]
+#         text += page.extract_text()
+#     return text
+
+# # Load the SpaCy model from the 'model-last' folder
+# @st.cache_resource
+# def load_spacy_model():
+#     model_path = Path(__file__).parent / "model-last"
+#     nlp = load_model_from_path(model_path)
+#   # This will load the model based on 'config.cfg'
+#     return nlp
+# Example of using Azure Blob Storage (if applicable)
+def extract_text_from_pdf(pdf_file):
+    pdf_reader = PyPDF2.PdfReader(pdf_file)
+    text = ""
+    for page_num in range(len(pdf_reader.pages)):
+        page = pdf_reader.pages[page_num]
+        text += page.extract_text()
+    return text
+
 import spacy
 import streamlit as st
 import PyPDF2
 import pandas as pd
 import plotly.express as px
-import google.generativeai as genai  # Import Google Generative AI
+import google.generativeai as genai
 import http.client
 import json
 from spacy import displacy
-from streamlit_lottie import st_lottie  # Import Lottie package
-import requests  # To fetch the Lottie animation
+from streamlit_lottie import st_lottie
+import requests
 import os
 from pathlib import Path
-from spacy.util import load_model_from_path
 from azure.storage.blob import BlobServiceClient
+from zipfile import ZipFile
 
+# Azure Blob Storage connection details
+AZURE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=nermodel01;AccountKey=tzNJJLGGcqVwzaF33YtvOJjwo9MkQRJs8zh2g82xisTPEAZTpq9pUilDfzNcGnELIHoOsk04ECSR+AStrSfNkQ==;EndpointSuffix=core.windows.net"
+CONTAINER_NAME = "nermodel02"
+MODEL_BLOB_NAME = "model-last"
 
 # Function to load Lottie animation
 def load_lottie_url(url):
@@ -22,13 +82,11 @@ def load_lottie_url(url):
         return r.json()
     return None
 
-# Load Lottie animation
 lottie_animation = load_lottie_url("https://lottie.host/10ef4447-c72d-44b4-b562-c93542913924/rQXGHy5QwU.json")
 
 # Configure Google Generative AI
 GOOGLE_API_KEY = 'AIzaSyCByDN630R0xn5_wXh4GgZBhBqX3Nw8S90'  # Replace with your actual API key
 genai.configure(api_key=GOOGLE_API_KEY)
-st.set_page_config(page_title="AI-Powered Resume Parser and Job Finder")
 # Function to extract text from PDF using PdfReader (PyPDF2 3.x)
 def extract_text_from_pdf(pdf_file):
     pdf_reader = PyPDF2.PdfReader(pdf_file)
@@ -38,58 +96,35 @@ def extract_text_from_pdf(pdf_file):
         text += page.extract_text()
     return text
 
-# Load the SpaCy model from the 'model-last' folder
+
+st.set_page_config(page_title="AI-Powered Resume Parser and Job Finder")
+
+# Function to download model from Azure Blob Storage if not present
+def download_model_from_blob():
+    model_path = Path("model-last")
+    if not model_path.exists():
+        st.write("Downloading model...")
+        blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
+        blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=MODEL_BLOB_NAME)
+
+        with open("model-last.zip", "wb") as download_file:
+            download_file.write(blob_client.download_blob().readall())
+
+        with ZipFile("model-last.zip", "r") as zip_ref:
+            zip_ref.extractall(".")
+        os.remove("model-last.zip")
+        st.write("Model downloaded and extracted.")
+
 @st.cache_resource
 def load_spacy_model():
-    model_path = Path(__file__).parent / "model-last"
-    nlp = load_model_from_path(model_path)
-  # This will load the model based on 'config.cfg'
+    download_model_from_blob()  # Download model if not available
+    model_path = Path("model-last")
+    nlp = spacy.load(model_path)
     return nlp
-# Example of using Azure Blob Storage (if applicable)
+
+# Rest of your code remains the same...
 
 
-def download_and_load_model():
-    # Azure Blob Storage details
-    blob_service_client = BlobServiceClient(
-        account_url="https://mloops01.blob.core.windows.net",
-        credential="xPOfpR9FQJ+PWewsmX63QHTouEKscSm0G0Mu9Xk4ryRyUet+KZ76xPx/ABsRDk++vLjb+dim6THa+AStFh6HMg=="
-    )
-    
-    # Specify the container and blob details
-    container_name = "finalyearproject"
-    blob_name = "model-last"  # Assuming this is the blob representing your model folder
-    model_path = "model-last"  # Local directory to store the downloaded files
-    
-    # Get the blob client
-    blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
-    
-    # Check if the blob exists, handle if it's encrypted or not
-    try:
-        # Attempt to download the blob file
-        print(f"Attempting to download blob: {blob_name}")
-        with open(os.path.join(model_path, "model-last"), "wb") as download_file:
-            download_file.write(blob_client.download_blob().readall())
-        
-        print(f"Downloaded {blob_name} successfully.")
-
-        # Now try to load the model into SpaCy
-        nlp = spacy.load(model_path)
-        print("Model loaded successfully.")
-        return nlp
-
-    except Exception as e:
-        # Handle errors, such as file not found, decryption, or loading issues
-        print(f"Error occurred: {str(e)}")
-        return None
-
-# Example usage
-nlp = download_and_load_model()
-if nlp:
-    # If the model was loaded successfully
-    doc = nlp("This is a test resume text.")
-    print(doc)
-else:
-    print("Failed to load the model.")
 
 
 # Function to visualize named entities in color
@@ -232,7 +267,7 @@ if 'job_roles' in st.session_state:
 with st.container():
     with st.sidebar:
         members = [
-            {"name": "Jain", "email": "sakshamgr8online@gmail. com",
+            {"name": "Saksham Jain", "email": "sakshamgr8online@gmail. com",
              "linkedin": "https://www.linkedin.com/in/saksham-jain-59b2241a4/"},
             {"name": "Rohan Saraswat", "email": "rohan.saraswat2003@gmail. com", "linkedin": "https://www.linkedin.com/in/rohan-saraswat-a70a2b225/"},
             {"name": "Shambhavi Kadam", "email": "shambhavi.kadam.btech2021@sitpune.edu.in",

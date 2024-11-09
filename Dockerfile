@@ -11,6 +11,7 @@ COPY requirements.txt .
 
 # Copy the current directory contents into the container
 COPY . .
+
 # Install dependencies
 RUN pip3 install -r requirements.txt
 
