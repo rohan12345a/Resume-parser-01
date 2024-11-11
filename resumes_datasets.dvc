@@ -1,0 +1,6 @@
+outs:
+- md5: 1939af6eba58eccb544d80027a51ea05.dir
+  size: 9325455
+  nfiles: 50
+  hash: md5
+  path: resumes_datasets
